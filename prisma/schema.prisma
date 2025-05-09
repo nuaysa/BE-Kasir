@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output = "../generated/client"
+  
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum StatusPiutang {
+  BelumLunas
+  Lunas
+}
+
+enum StatusStok {
+  Tersedia
+  Terjual
+  Kadaluarsa
+  Retur
+  Rusak
+}
+
+enum JenisPenjualan {
+  Eceran
+  Grosir
+}
+
+model Kategori {
+  id        Int              @id @default(autoincrement())
+  nama      String           @unique
+  Produk    Produk[]
+  isDeleted Boolean          @default(false)
+  deletedAt DateTime?        @updatedAt
+  komisi    KomisiKategori[]
+}
+
+enum Role {
+  Admin
+  Kasir
+}
+
+enum StatusPembelian {
+  Lunas
+  Kredit
+}
+
+model Produk {
+  id              Int               @id @default(autoincrement())
+  nama            String
+  kategori        Kategori          @relation(fields: [kategoriId], references: [id])
+  kategoriId      Int
+  hargaBeli       Int
+  hargaJualRetail Int
+  hargaJualGrosir Int
+  qtyMinGrosir    Int               @default(1)
+  Stok            Stok[]
+  PembelianDetail PembelianDetail[]
+  PenjualanDetail PenjualanDetail[]
+  isDeleted       Boolean           @default(false)
+  deletedAt       DateTime?         @updatedAt
+}
+
+model Stok {
+  id              Int               @id @default(autoincrement())
+  produk          Produk            @relation(fields: [produkId], references: [id])
+  produkId        Int
+  serialNumber    String?           @unique
+  expiredDate     DateTime?
+  qty             Int
+  status          StatusStok        @default(Tersedia)
+  PenjualanDetail PenjualanDetail[]
+  createdAt       DateTime          @default(now())
+}
+
+model Penjualan {
+  id              Int               @id @default(autoincrement())
+  tanggal         DateTime          @default(now())
+  total           Int
+  kasir           Pengguna          @relation(fields: [kasirId], references: [id])
+  kasirId         Int
+  metodeBayar     MetodeBayar       @relation(fields: [metodeBayarId], references: [id])
+  metodeBayarId   Int
+  PenjualanDetail PenjualanDetail[]
+  createdAt       DateTime          @default(now())
+}
+
+model MetodeBayar {
+  id        Int         @id @default(autoincrement())
+  nama      String      @unique
+  Penjualan Penjualan[]
+}
+
+model PenjualanDetail {
+  id          Int            @id @default(autoincrement())
+  penjualan   Penjualan      @relation(fields: [penjualanId], references: [id])
+  produk      Produk         @relation(fields: [produkId], references: [id])
+  produkId    Int // ✅ ini yang kamu tambahkan
+  penjualanId Int
+  stok        Stok           @relation(fields: [stokId], references: [id])
+  stokId      Int
+  harga       Int
+  qty         Int            @default(1)
+  tipe        JenisPenjualan
+  Komisi      KomisiKasir[]
+}
+
+model Pengguna {
+  id         Int           @id @default(autoincrement())
+  nama       String
+  username   String        @unique
+  password   String
+  email      String        @unique
+  role       Role          @default(Kasir)
+  verifikasi Boolean       @default(false)
+  Penjualan  Penjualan[]
+  Komisi     KomisiKasir[]
+  isDeleted  Boolean       @default(false)
+  deletedAt  DateTime?     @updatedAt
+}
+
+model KomisiKategori {
+  id         Int      @id @default(autoincrement())
+  kategori   Kategori @relation(fields: [kategoriId], references: [id])
+  kategoriId Int      @unique // 1 kategori = 1 aturan komisi
+  persen     Int      @default(5) // Persentase komisi (e.g., 5%)
+  createdAt  DateTime @default(now())
+}
+
+model KomisiKasir {
+  id                Int             @id @default(autoincrement())
+  penjualanDetail   PenjualanDetail @relation(fields: [penjualanDetailId], references: [id])
+  penjualanDetailId Int             @unique
+  kasir             Pengguna        @relation(fields: [kasirId], references: [id])
+  kasirId           Int
+  jumlah            Int
+  createdAt         DateTime        @default(now()) // ⬅️ Tambahkan tracking waktu
+}
+
+model LaporanHarian {
+  id             Int      @id @default(autoincrement())
+  tanggal        DateTime @unique
+  stokAwal       Int
+  stokAkhir      Int
+  totalPenjualan Int
+  totalHPP       Int
+  totalLaba      Int
+  totalKomisi    Int
+}
+
+model Suplier {
+  id        Int         @id @default(autoincrement())
+  nama      String
+  kontak    String?
+  isDeleted Boolean     @default(false)
+  deletedAt DateTime?   @updatedAt
+  Pembelian Pembelian[]
+}
+
+model Pembelian {
+  id              Int               @id @default(autoincrement())
+  suplier         Suplier           @relation(fields: [suplierId], references: [id])
+  suplierId       Int
+  tanggal         DateTime          @default(now())
+  total           Int
+  status          StatusPembelian
+  PembelianDetail PembelianDetail[]
+  Piutang         Piutang[]
+  createdAt       DateTime          @default(now())
+}
+
+model PembelianDetail {
+  id          Int       @id @default(autoincrement())
+  pembelian   Pembelian @relation(fields: [pembelianId], references: [id])
+  pembelianId Int
+  produk      Produk    @relation(fields: [produkId], references: [id])
+  produkId    Int
+  qty         Int
+  harga       Int
+}
+
+model Piutang {
+  id                Int           @id @default(autoincrement())
+  pembelian         Pembelian     @relation(fields: [pembelianId], references: [id])
+  pembelianId       Int
+  jumlah            Int
+  tanggalJatuhTempo DateTime
+  status            StatusPiutang
+}
