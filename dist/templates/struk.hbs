@@ -1,0 +1,26 @@
+<h2>Struk Pembelian</h2>
+<p><strong>ID Transaksi:</strong> TRX-{{id}}</p>
+<p><strong>Kasir:</strong> {{kasir}}</p>
+<p><strong>Tanggal:</strong> {{tanggal}}</p>
+<p><strong>Metode Bayar:</strong> {{metodeBayar}}</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Produk</th>
+      <th>Qty</th>
+      <th>Subtotal</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{#each items}}
+    <tr>
+      <td>{{nama}}</td>
+      <td>{{qty}}</td>
+      <td>Rp {{subtotal}}</td>
+    </tr>
+    {{/each}}
+  </tbody>
+</table>
+
+<h3>Total: Rp {{total}}</h3>

@@ -1,4 +1,4 @@
-import { StatusStok } from "@prisma/client";
+import { StatusStok } from "prisma/generated/client";
 import prisma from "../../prisma";
 
 interface editStockData {
