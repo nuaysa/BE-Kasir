@@ -1,5 +1,5 @@
 import prisma from "../prisma";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "prisma/generated/client";
 
 export const generateLaporanHarian = async (params?: { tanggal?: Date }) => {
     const tanggal = params?.tanggal || new Date();

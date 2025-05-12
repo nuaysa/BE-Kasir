@@ -105,7 +105,7 @@ export class PenjualanController {
 
   async sendEmailController(req: Request, res: Response) {
     try {
-      const { emailCustomer } = req.params;
+      const { emailCustomer } = req.body;
       const { id } = req.params;
 
       await sendEmailService({
