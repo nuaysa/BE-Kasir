@@ -36,7 +36,9 @@ const createPenjualanService = (data) => __awaiter(void 0, void 0, void 0, funct
             }
             stokDipakai[item.produkId] = stokTersedia.map((s) => s.id);
         }
+
         const { penjualanId, totalHarga } = yield prisma_1.default.$transaction((tx) => __awaiter(void 0, void 0, void 0, function* () {
+
             var _a, _b, _c;
             const penjualan = yield tx.penjualan.create({
                 data: {
@@ -67,9 +69,9 @@ const createPenjualanService = (data) => __awaiter(void 0, void 0, void 0, funct
                         data: {
                             penjualanId: penjualan.id,
                             stokId,
-                            harga,
+                            harga: harga,
                             qty: 1,
-                            tipe,
+                            tipe: tipe,
                             produkId: item.produkId,
                         },
                     });
@@ -78,7 +80,9 @@ const createPenjualanService = (data) => __awaiter(void 0, void 0, void 0, funct
                     yield tx.komisiKasir.create({
                         data: {
                             penjualanDetailId: detail.id,
-                            kasirId,
+
+                            kasirId: kasirId,
+
                             jumlah: komisiAmount,
                         },
                     });
@@ -101,6 +105,7 @@ const createPenjualanService = (data) => __awaiter(void 0, void 0, void 0, funct
             penjualanId,
             total: totalHarga,
         };
+
     }
     catch (err) {
         console.error("Error in createPenjualanService:", err);
